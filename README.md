@@ -29,7 +29,7 @@ npm run dev
 ```env
 PORT=3000
 API_PASSWORD=tu_password_secreto
-PRINT_QR_IN_TERMINAL=true
+ALLOWED_ORIGINS=http://localhost:3000,https://midominio.com
 ```
 
 ## Uso de la API
@@ -212,6 +212,30 @@ print(result)
 - Asegúrate de que WhatsApp esté conectado (`/status`)
 - Revisa que el número exista en WhatsApp
 
+## Documentación Swagger
+
+La API incluye documentación interactiva con Swagger. Una vez iniciado el servidor, accede a:
+
+```
+http://localhost:3000/api-docs
+```
+
+Desde ahí podrás:
+- Ver todos los endpoints disponibles
+- Probar las peticiones directamente
+- Ver los esquemas de datos
+- Entender cómo funciona la autenticación
+- Ver ejemplos de uso
+
+## Características
+
+- ✅ CORS configurable por dominios permitidos
+- ✅ Logging completo de todas las peticiones con origen
+- ✅ Documentación Swagger interactiva
+- ✅ Soporte para QR en terminal
+- ✅ Autenticación por password
+- ✅ Envío de mensajes de texto y media
+
 ## Licencia
 
-MIT 
+MIT
