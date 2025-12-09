@@ -1,5 +1,3 @@
-const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@adiwajshing/baileys');
-const { Boom } = require('@hapi/boom');
 const fs = require('fs');
 const path = require('path');
 const qrcode = require('qrcode-terminal');
@@ -9,10 +7,36 @@ class WhatsAppClient {
         this.sock = null;
         this.isConnected = false;
         this.authFolder = './auth_info_baileys';
+        this.baileys = null;
+        this.Boom = null;
+    }
+
+    async loadBaileys() {
+        if (!this.baileys) {
+            this.baileys = await import('@adiwajshing/baileys');
+            try {
+                const hapiBoom = await import('@hapi/boom');
+                this.Boom = hapiBoom.Boom || hapiBoom.default?.Boom;
+            } catch (e) {
+                // Si @hapi/boom no está disponible, usaremos una alternativa
+                this.Boom = class Boom extends Error {
+                    constructor(message) {
+                        super(message);
+                        this.output = { statusCode: 403 };
+                    }
+                };
+            }
+        }
+        return this.baileys;
     }
 
     async connect() {
         try {
+            // Cargar Baileys dinámicamente
+            const baileys = await this.loadBaileys();
+            const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = baileys;
+            this.DisconnectReason = DisconnectReason;
+
             // Crear carpeta de auth si no existe
             if (!fs.existsSync(this.authFolder)) {
                 fs.mkdirSync(this.authFolder);
@@ -53,7 +77,7 @@ class WhatsAppClient {
                 }
                 
                 if (connection === 'close') {
-                    const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+                    const shouldReconnect = (lastDisconnect?.error instanceof this.Boom)?.output?.statusCode !== this.DisconnectReason.loggedOut;
                     console.log('Conexión cerrada debido a:', lastDisconnect?.error, ', reconectando:', shouldReconnect);
                     
                     if (shouldReconnect) {
