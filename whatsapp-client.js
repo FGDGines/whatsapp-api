@@ -77,8 +77,19 @@ class WhatsAppClient {
                 }
                 
                 if (connection === 'close') {
-                    const shouldReconnect = (lastDisconnect?.error instanceof this.Boom)?.output?.statusCode !== this.DisconnectReason.loggedOut;
-                    console.log('Conexión cerrada debido a:', lastDisconnect?.error, ', reconectando:', shouldReconnect);
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    const isLoggedOut = statusCode === this.DisconnectReason.loggedOut;
+                    const isUnauthorized = statusCode === 401;
+                    
+                    if (isLoggedOut || isUnauthorized) {
+                        console.log('❌ Sesión de WhatsApp expirada o inválida (401/403)');
+                        console.log('💡 Solución: Elimina la carpeta auth_info_baileys y reinicia el servidor para generar un nuevo QR');
+                        this.isConnected = false;
+                        return;
+                    }
+                    
+                    const shouldReconnect = statusCode !== this.DisconnectReason.loggedOut;
+                    console.log('Conexión cerrada debido a:', lastDisconnect?.error?.message || lastDisconnect?.error, ', reconectando:', shouldReconnect);
                     
                     if (shouldReconnect) {
                         setTimeout(() => this.connect(), 3000);
